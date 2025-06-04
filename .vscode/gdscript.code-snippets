@@ -1,0 +1,18 @@
+{
+	"accept": {
+		"scope": "gdscript",
+		"prefix": "accept",
+		"body": [
+			"func accept(visitor: AbstractAstVisitor) -> Variant:",
+			"\treturn visitor.visit_${1:node}_expr(self)"
+		],
+		"description": "visitor acceptance"
+	},
+	"visit_xyz_node": {
+		"prefix": "visit_",
+		"body": [
+			"func visit_${1:node}(${1:node}: ${2:Node}) -> Variant:",
+			"\treturn ${0:Lox.not_implemented()}"
+		]
+	}
+}
