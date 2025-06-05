@@ -40,14 +40,14 @@ static func _run(program: String) -> Error:
 	var tokens := scanner.scan_tokens()
 
 	var parser := Parser.new(tokens)
-	var ast := parser.parse()
+	var stmts := parser.parse()
 
 	if _had_error:
 		return FAILED
 	
-	var result = _interpreter.interpret(ast)
-	if _line_output_method.is_valid():
-		_line_output_method.call(str(result))
+	_interpreter.interpret(stmts)
+	#if _line_output_method.is_valid():
+	#	_line_output_method.call(Ast.AstPrinter.new().do_program(stmts))
 	
 	if _had_runtime_error:
 		return FAILED
@@ -82,6 +82,12 @@ static func _report(line: int, where: String, message: String) -> void:
 	if _line_output_method.is_valid():
 		_line_output_method.call(msg, true)
 	_had_error = true
+
+
+static func output(txt: String) -> void:
+	print(txt)
+	if _line_output_method.is_valid():
+		_line_output_method.call(txt)
 
 
 static func not_implemented() -> Error:

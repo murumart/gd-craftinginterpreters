@@ -12,13 +12,32 @@ func _init(tokens: Array[Token]) -> void:
 	_tokens = tokens
 
 
-func parse() -> Ast.AstNode:
-	var expr := _parse_expression()
-	return expr
+func parse() -> Array[Ast.Stmt]:
+	var stmts: Array[Ast.Stmt] = []
+	while not _is_at_end():
+		stmts.append(_parse_statement())
+	return stmts
 
 
 func _parse_expression() -> Ast.Expr:
 	return _parse_equality()
+
+
+func _parse_statement() -> Ast.Stmt:
+	if _match([t.PRINT]): return _parse_print_statement()
+	return _parse_expression_statement()
+
+
+func _parse_print_statement() -> Ast.PrintStmt:
+	var val := _parse_expression()
+	_consume(t.SEMICOLON, "Expect ';' after value.")
+	return Ast.PrintStmt.new(val)
+
+
+func _parse_expression_statement() -> Ast.ExprStmt:
+	var val := _parse_expression()
+	_consume(t.SEMICOLON, "Expect ';' after expression.")
+	return Ast.ExprStmt.new(val)
 
 
 func _parse_equality() -> Ast.Expr:

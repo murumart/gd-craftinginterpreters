@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dxrtqq7h0138k" path="res://main.gd" id="1_ig7tw"]
 
-[node name="Main" type="Control" node_paths=PackedStringArray("line", "output")]
+[node name="Main" type="Control" node_paths=PackedStringArray("line", "output", "load_file_btn")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,8 +10,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ig7tw")
-line = NodePath("Panel/Margin/VBoxContainer/ReplLine")
-output = NodePath("Panel/Margin/VBoxContainer/ReplOutput")
+line = NodePath("Panel/Margin/HBoxContainer/VBoxContainer/ReplLine")
+output = NodePath("Panel/Margin/HBoxContainer/VBoxContainer/ReplOutput")
+load_file_btn = NodePath("Panel/Margin/HBoxContainer/VBoxContainer2/LoadFileButton")
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 1
@@ -23,20 +24,24 @@ grow_vertical = 2
 
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.595
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.559937
+grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 12
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel/Margin"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
 
-[node name="ReplOutput" type="RichTextLabel" parent="Panel/Margin/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/Margin/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReplOutput" type="RichTextLabel" parent="Panel/Margin/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -44,6 +49,23 @@ bbcode_enabled = true
 text = "Welcome to REPL.
 "
 
-[node name="ReplLine" type="LineEdit" parent="Panel/Margin/VBoxContainer"]
+[node name="ReplLine" type="LineEdit" parent="Panel/Margin/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="Panel/Margin/HBoxContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="LoadFileButton" type="Button" parent="Panel/Margin/HBoxContainer/VBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Load File"
+
+[node name="FileDialog" type="FileDialog" parent="Panel/Margin/HBoxContainer/VBoxContainer2/LoadFileButton"]
+title = "Open a File"
+ok_button_text = "Open"
+file_mode = 0
+root_subfolder = "res://"
+filters = PackedStringArray("*.lox")
+show_hidden_files = true

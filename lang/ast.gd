@@ -12,6 +12,8 @@ static func group(a: Expr) -> GroupingExpr:
 	return GroupingExpr.new(a)
 
 
+# AST node definitions
+
 class AstNode:
 	var _children: Array[AstNode]
 
@@ -28,6 +30,8 @@ class AstNode:
 	func accept(_visitor: AbstractAstVisitor) -> Variant:
 		return Lox.not_implemented()
 
+
+# EXPRESSION definitions
 
 class Expr extends AstNode:
 	pass
@@ -118,6 +122,44 @@ class LiteralExpr extends Expr:
 	func accept(v: AbstractAstVisitor) -> Variant:
 		return v.visit_literal_expr(self)
 
+
+# STATEMENT definitions
+
+class Stmt extends AstNode:
+	pass
+
+
+class ExprStmt extends Stmt:
+	var _expr: Expr
+
+
+	func _init(expr: Expr) -> void:
+		_expr = expr
+	
+
+	func get_expr() -> Expr:
+		return _expr
+	
+
+	func accept(visitor: AbstractAstVisitor) -> Variant:
+		return visitor.visit_expr_stmt(self)
+
+
+class PrintStmt extends Stmt:
+	var _expr: Expr
+
+
+	func _init(expr: Expr) -> void:
+		_expr = expr
+	
+
+	func get_expr() -> Expr:
+		return _expr
+	
+
+	func accept(visitor: AbstractAstVisitor) -> Variant:
+		return visitor.visit_print_stmt(self)
+
 # VISITOR
 
 class AbstractAstVisitor:
@@ -131,10 +173,29 @@ class AbstractAstVisitor:
 	func visit_unary_expr(_expr: UnaryExpr) -> Variant: return Lox.not_implemented()
 	func visit_grouping_expr(_grouping_expr: GroupingExpr) -> Variant: return Lox.not_implemented()
 
+	func visit_expr_stmt(_expr_stmt: ExprStmt) -> Variant: return Lox.not_implemented()
+	func visit_print_stmt(_print_stmt: PrintStmt) -> Variant: return Lox.not_implemented()
+
 
 class AstPrinter extends AbstractAstVisitor:
 	var code := false
+
+
+	func do_program(stmts: Array[Stmt]) -> String:
+		var st := ""
+		for stmt in stmts:
+			st += visit(stmt) + ";\n"
+		return st
 	
+
+	func visit_print_stmt(print_stmt: PrintStmt) -> Variant:
+		return "print " + visit(print_stmt.get_expr())
+	
+
+	func visit_expr_stmt(exprst: ExprStmt) -> Variant:
+		return visit(exprst.get_expr())
+
+
 	func visit_binary_expr(expr: BinaryExpr) -> Variant:
 		return (("" if code else "bin(")
 			+ visit(expr.get_left())

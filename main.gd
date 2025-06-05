@@ -5,9 +5,20 @@ const Ast := preload("res://lang/ast.gd")
 
 @export var line: LineEdit
 @export var output: RichTextLabel
+@export var load_file_btn: Button
 
 
 func _ready() -> void:
+	load_file_btn.pressed.connect(func():
+		var fd: FileDialog = load_file_btn.get_child(0)
+		fd.file_selected.connect(func(s: String):
+			fd.hide()
+			Lox.main([s])
+		, CONNECT_ONE_SHOT)
+		fd.canceled.connect(fd.hide, CONNECT_ONE_SHOT)
+		fd.show()
+	)
+
 	Lox._line_input_method = get_line_input
 	Lox._line_output_method = get_line_output
 	Lox.main([])

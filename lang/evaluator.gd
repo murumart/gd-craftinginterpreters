@@ -5,19 +5,36 @@ const Scanner = preload("res://lang/scanner.gd")
 const t = Scanner.TokenType
 
 
-func interpret(ast: AstNode) -> Variant:
+func interpret(stmts: Array[Ast.Stmt]) -> void:
 	var visitor := Evaluator.new()
-	var result: Variant = visitor.evaluate(ast)
-	if result is RuntimeError:
-		Lox.runtime_error(result)
-		return null
-	return result
+	for stmt in stmts:
+		var result: Variant = visitor.execute(stmt)
+		if result is RuntimeError:
+			Lox.runtime_error(result)
+			return
 
 
 class Evaluator extends Ast.AbstractAstVisitor:
 	func evaluate(expr: Ast.Expr) -> Variant:
 		return visit(expr)
 	
+
+	func execute(stmt: Ast.Stmt) -> Variant:
+		return visit(stmt)
+	
+
+	func visit_expr_stmt(expr_stmt: Ast.ExprStmt) -> Variant:
+		var ev: Variant = evaluate(expr_stmt.get_expr())
+		if ev is RuntimeError: return ev
+		return null
+
+
+	func visit_print_stmt(print_stmt: Ast.PrintStmt) -> Variant:
+		var ev: Variant = evaluate(print_stmt.get_expr())
+		if ev is RuntimeError: return ev
+		Lox.output(str(ev))
+		return null
+
 
 	func visit_binary_expr(binary_expr: Ast.BinaryExpr) -> Variant:
 		var left: Variant = visit(binary_expr.get_left())
