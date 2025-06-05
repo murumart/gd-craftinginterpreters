@@ -42,6 +42,8 @@ class Evaluator extends Ast.AbstractAstVisitor:
 			t.SLASH:
 				var err := check_number_operands(binary_expr.get_operator(), left, right)
 				if err != null: return err
+				if right == 0:
+					return RuntimeError.new(binary_expr.get_operator(), ERR_INVALID_PARAMETER, "Division by zero")
 				return left / right
 			t.LESS:
 				var err := check_number_operands(binary_expr.get_operator(), left, right)
