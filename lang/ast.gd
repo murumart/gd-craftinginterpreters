@@ -1,30 +1,7 @@
 const Scanner = preload("res://lang/scanner.gd")
 const tok_t = Scanner.TokenType
+const Token = Scanner.Token
 const Lox = preload("res://lang/lox.gd")
-
-
-static func add(left: Expr, right: Expr) -> BinaryExpr:
-	return BinaryExpr.new(left, tok_t.PLUS, right)
-
-
-static func sub(left: Expr, right: Expr) -> BinaryExpr:
-	return BinaryExpr.new(left, tok_t.MINUS, right)
-
-
-static func mul(left: Expr, right: Expr) -> BinaryExpr:
-	return BinaryExpr.new(left, tok_t.STAR, right)
-
-
-static func div(left: Expr, right: Expr) -> BinaryExpr:
-	return BinaryExpr.new(left, tok_t.SLASH, right)
-
-
-static func neg(a: Expr) -> UnaryExpr:
-	return UnaryExpr.new(a, tok_t.MINUS)
-
-
-static func notb(a: Expr) -> UnaryExpr:
-	return UnaryExpr.new(a, tok_t.BANG)
 
 
 static func lit(a: Variant) -> LiteralExpr:
@@ -57,10 +34,10 @@ class Expr extends AstNode:
 
 
 class BinaryExpr extends Expr:
-	var _operator: tok_t
+	var _operator: Token
 
 
-	func _init(left: Expr, op: tok_t, right: Expr) -> void:
+	func _init(left: Expr, op: Token, right: Expr) -> void:
 		super ([left, right])
 		_operator = op
 	
@@ -73,7 +50,7 @@ class BinaryExpr extends Expr:
 		return _children[1]
 	
 
-	func get_operator() -> tok_t:
+	func get_operator() -> Token:
 		return _operator
 	
 
@@ -82,10 +59,10 @@ class BinaryExpr extends Expr:
 
 
 class UnaryExpr extends Expr:
-	var _operator: tok_t
+	var _operator: Token
 
 
-	func _init(target: Expr, op: tok_t) -> void:
+	func _init(target: Expr, op: Token) -> void:
 		super ([target])
 		_operator = op
 	
@@ -94,7 +71,7 @@ class UnaryExpr extends Expr:
 		return _children[0]
 	
 
-	func get_operator() -> tok_t:
+	func get_operator() -> Token:
 		return _operator
 	
 
@@ -145,7 +122,8 @@ class LiteralExpr extends Expr:
 
 class AbstractAstVisitor:
 	func visit(node: AstNode) -> Variant:
-		return node.accept(self)
+		var result: Variant = node.accept(self)
+		return result
 	
 
 	func visit_binary_expr(_expr: BinaryExpr) -> Variant: return Lox.not_implemented()
@@ -165,9 +143,15 @@ class AstPrinter extends AbstractAstVisitor:
 				tok_t.MINUS: "-",
 				tok_t.STAR: "*",
 				tok_t.SLASH: "/",
-			}[expr.get_operator()]
+				tok_t.LESS: "<",
+				tok_t.GREATER: ">",
+				tok_t.LESS_EQUAL: "<=",
+				tok_t.GREATER_EQUAL: ">=",
+				tok_t.EQUAL_EQUAL: "==",
+				tok_t.BANG_EQUAL: "!=",
+			}[expr.get_operator().type]
 			+" " + visit(expr.get_right())
-			+("" if code else ")")
+			+ ("" if code else ")")
 		)
 	
 	
@@ -184,9 +168,9 @@ class AstPrinter extends AbstractAstVisitor:
 			{
 				tok_t.BANG: "!",
 				tok_t.MINUS: "-",
-			}[expr.get_operator()]
+			}[expr.get_operator().type]
 			+"" + visit(expr.get_target())
-			+("" if not code else ")")
+			+ ("" if not code else ")")
 		)
 
 

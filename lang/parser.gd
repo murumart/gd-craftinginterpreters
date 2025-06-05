@@ -45,7 +45,7 @@ func _parse_unary() -> Ast.Expr:
 	if _match([t.BANG, t.MINUS]):
 		var op := _previous()
 		var right := _parse_unary()
-		return Ast.UnaryExpr.new(right, op.type)
+		return Ast.UnaryExpr.new(right, op)
 	return _parse_primary()
 
 
@@ -127,7 +127,7 @@ func _parse_binary_leftassoc(higher: Callable, tokens: Array[t]) -> Ast.Expr:
 	while _match(tokens):
 		var op := _previous()
 		var right: Ast.Expr = higher.call()
-		expr = Ast.BinaryExpr.new(expr, op.type, right)
+		expr = Ast.BinaryExpr.new(expr, op, right)
 	
 	return expr
 

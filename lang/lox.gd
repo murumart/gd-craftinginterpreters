@@ -1,9 +1,12 @@
 const Scanner = preload("res://lang/scanner.gd")
 const Parser = preload("res://lang/parser.gd")
 const Ast = preload("res://lang/ast.gd")
+const Eval = preload("res://lang/evaluator.gd")
 
+static var _interpreter = Eval.new()
 static var _line_input_method: Callable
 static var _had_error := false
+static var _had_runtime_error := false
 
 
 static func main(args: PackedStringArray) -> Error:
@@ -41,7 +44,9 @@ static func _run(program: String) -> Error:
 	if _had_error:
 		return FAILED
 	
-	print(Ast.AstPrinter.new().visit(ast))
+	print(_interpreter.interpret(ast))
+	if _had_runtime_error:
+		return FAILED
 
 	return OK
 
@@ -55,6 +60,12 @@ static func error_t(tok: Scanner.Token, message: String) -> void:
 		_report(tok.line, " at end", message)
 	else:
 		_report(tok.line, " at '" + tok.lexeme + "'", message)
+
+
+static func runtime_error(err: Eval.RuntimeError) -> void:
+	printerr(err.msg + "\n[line " + str(err.tok.line) + ":" + str(err.tok.column) + "] " + err.tok.lexeme)
+	push_error(err.msg + "\n[line " + str(err.tok.line) + ":" + str(err.tok.column) + "] " + err.tok.lexeme)
+	_had_runtime_error = true
 
 
 static func _report(line: int, where: String, message: String) -> void:

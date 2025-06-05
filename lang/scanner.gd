@@ -46,6 +46,7 @@ var _tokens: Array[Token] = []
 var _start: int = 0
 var _current: int = 0
 var _line: int = 0
+var _column: int = 0
 
 
 func _init(program: String) -> void:
@@ -93,7 +94,7 @@ func _scan_token() -> void:
 				_add_token(t.SLASH)
 		
 		" ", "\r", "\t": pass
-		"\n": _line += 1
+		"\n": _advance_line()
 
 		"\"": _scan_string()
 
@@ -109,7 +110,7 @@ func _scan_token() -> void:
 func _scan_string() -> void:
 	while _peek() != "\"" and not _is_at_end():
 		if _peek() == "\n":
-			_line += 1
+			_advance_line()
 		_advance()
 	
 	if _is_at_end():
@@ -176,12 +177,19 @@ func _is_at_end() -> bool:
 func _advance() -> String:
 	var c := _source[_current]
 	_current += 1
+	_column += 1
 	return c
+
+
+func _advance_line() -> int:
+	_line += 1
+	_column = 0
+	return _line
 
 
 func _add_token(t: TokenType, l: Variant = null) -> void:
 	var text := substr(_source, _start, _current)
-	_tokens.push_back(Token.new(t, text, l, _line))
+	_tokens.push_back(Token.new(t, text, l, _line, _column))
 
 
 func _is_digit(chara: String) -> bool:
@@ -214,13 +222,15 @@ class Token:
 	var lexeme: String
 	var literal: Variant
 	var line: int
+	var column: int
 
 
-	func _init(type_: TokenType, lexeme_: String, literal_: Variant, line_: int) -> void:
+	func _init(type_: TokenType, lexeme_: String, literal_: Variant, line_: int, column_: int = -1) -> void:
 		type = type_
 		lexeme = lexeme_
 		literal = literal_
 		line = line_
+		column = column_
 	
 
 	func _to_string() -> String:
