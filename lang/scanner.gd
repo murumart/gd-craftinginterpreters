@@ -185,12 +185,14 @@ func _add_token(t: TokenType, l: Variant = null) -> void:
 
 
 func _is_digit(chara: String) -> bool:
+	if not chara: return false
 	var c: int = chara.unicode_at(0)
 	var c0 = "0".unicode_at(0)
 	return c >= c0 and c <= c0 + 10
 
 
 func _is_alpha(chara: String) -> bool:
+	if not chara: return false
 	var c: int = chara.unicode_at(0)
 	var ca := "a".unicode_at(0)
 	var cz := "z".unicode_at(0)

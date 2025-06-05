@@ -1,5 +1,1 @@
-var xd = "gleebungus";
-var z = 311213;
-
-a + b / c * (x * y); // this is a fucking domment
-z = -1;
+1 + 2 * !!!"gleebungus" / (4 + 2) * 4

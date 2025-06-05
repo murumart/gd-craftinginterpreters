@@ -125,11 +125,17 @@ class LiteralExpr extends Expr:
 		match typeof(varnt):
 			TYPE_STRING: _type = TYPE_STRING
 			TYPE_INT, TYPE_FLOAT: _type = TYPE_FLOAT
+			TYPE_BOOL: _type = TYPE_BOOL
+			TYPE_NIL: _type = TYPE_NIL
 			_: assert(false, "Unsuitable literal type " + type_string(typeof(varnt)))
 	
 
 	func get_value() -> Variant:
 		return _value
+
+
+	func get_type() -> Variant.Type:
+		return _type
 
 
 	func accept(v: AbstractAstVisitor) -> Variant:
@@ -149,8 +155,10 @@ class AbstractAstVisitor:
 
 
 class AstPrinter extends AbstractAstVisitor:
+	var code := false
+	
 	func visit_binary_expr(expr: BinaryExpr) -> Variant:
-		return ("bin("
+		return (("" if code else "bin(")
 			+ visit(expr.get_left())
 			+" " + {
 				tok_t.PLUS: "+",
@@ -159,26 +167,30 @@ class AstPrinter extends AbstractAstVisitor:
 				tok_t.SLASH: "/",
 			}[expr.get_operator()]
 			+" " + visit(expr.get_right())
-			+")"
+			+("" if code else ")")
 		)
 	
 	
 	func visit_literal_expr(expr: LiteralExpr) -> Variant:
 		if expr.get_value() == null: return "nil"
+		if expr.get_type() == TYPE_STRING:
+			return "\"" + str(expr.get_value()) + "\""
 		return str(expr.get_value())
 
 
 	func visit_unary_expr(expr: UnaryExpr) -> Variant:
-		return ("un("
+		return (("" if code else "un(")
 			+
 			{
 				tok_t.BANG: "!",
 				tok_t.MINUS: "-",
 			}[expr.get_operator()]
-			+" " + visit(expr.get_target())
-			+")"
+			+"" + visit(expr.get_target())
+			+("" if not code else ")")
 		)
 
 
 	func visit_grouping_expr(grouping_expr: GroupingExpr) -> Variant:
-		return "grouped(" + visit(grouping_expr.get_expr()) + ")"
+		return (
+			("(" if code else "grouping(")
+			+ visit(grouping_expr.get_expr()) + ")")
