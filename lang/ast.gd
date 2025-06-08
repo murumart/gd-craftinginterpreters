@@ -160,6 +160,24 @@ class PrintStmt extends Stmt:
 	func accept(visitor: AbstractAstVisitor) -> Variant:
 		return visitor.visit_print_stmt(self)
 
+
+class VarStmt extends Stmt:
+	var _name: Token
+	var _initi: Expr
+
+
+	func _init(name: Token, expr: Expr) -> void:
+		_name = name
+		_initi = expr
+	
+
+	func get_initi() -> Expr:
+		return _initi
+	
+
+	func accept(visitor: AbstractAstVisitor) -> Variant:
+		return visitor.visit_var_stmt(self)
+
 # VISITOR
 
 class AbstractAstVisitor:
@@ -175,6 +193,7 @@ class AbstractAstVisitor:
 
 	func visit_expr_stmt(_expr_stmt: ExprStmt) -> Variant: return Lox.not_implemented()
 	func visit_print_stmt(_print_stmt: PrintStmt) -> Variant: return Lox.not_implemented()
+	func visit_var_stmt(_var_stmt: VarStmt) -> Variant: return Lox.not_implemented()
 
 
 class AstPrinter extends AbstractAstVisitor:
@@ -239,3 +258,7 @@ class AstPrinter extends AbstractAstVisitor:
 		return (
 			("(" if code else "grouping(")
 			+ visit(grouping_expr.get_expr()) + ")")
+	
+
+	func visit_var_stmt(var_stmt: VarStmt) -> Variant:
+		return "var " + visit(var_stmt.get_initi())

@@ -15,8 +15,21 @@ func _init(tokens: Array[Token]) -> void:
 func parse() -> Array[Ast.Stmt]:
 	var stmts: Array[Ast.Stmt] = []
 	while not _is_at_end():
-		stmts.append(_parse_statement())
+		stmts.append(_parse_declaration())
 	return stmts
+
+
+func _parse_declaration() -> Ast.Stmt:
+	var stmt: Ast.Stmt
+	if _match([t.VAR]):
+		stmt = _parse_var_declaration()
+	else:
+		stmt = _parse_statement()
+	
+	if stmt == null:
+		_synchronise()
+		return null
+	return stmt
 
 
 func _parse_expression() -> Ast.Expr:
@@ -30,13 +43,30 @@ func _parse_statement() -> Ast.Stmt:
 
 func _parse_print_statement() -> Ast.PrintStmt:
 	var val := _parse_expression()
-	_consume(t.SEMICOLON, "Expect ';' after value.")
+	var err := _consume(t.SEMICOLON, "Expect ';' after value.")
+	if err.err != OK:
+		return null
 	return Ast.PrintStmt.new(val)
+
+
+func _parse_var_declaration() -> Ast.Stmt:
+	var name := _consume(t.IDENTIFIER, "Expect variable name.")
+	if name.err != OK: return null
+
+	var init: Ast.Expr = null
+	if _match([t.EQUAL]):
+		init = _parse_expression()
+	
+	var err := _consume(t.SEMICOLON, "Expect `;` after variable declaration.")
+	if err.err != OK: return null
+	return Ast.VarStmt.new(name.tok, init)
 
 
 func _parse_expression_statement() -> Ast.ExprStmt:
 	var val := _parse_expression()
-	_consume(t.SEMICOLON, "Expect ';' after expression.")
+	var err := _consume(t.SEMICOLON, "Expect ';' after expression.")
+	if err.err != OK:
+		return null
 	return Ast.ExprStmt.new(val)
 
 
@@ -78,7 +108,9 @@ func _parse_primary() -> Ast.Expr:
 	
 	if _match([t.LEFT_PAREN]):
 		var expr := _parse_expression()
-		_consume(t.RIGHT_PAREN, "Expect ')' after expression.")
+		var err := _consume(t.RIGHT_PAREN, "Expect ')' after expression.")
+		if err.err != OK:
+			return null
 		return Ast.group(expr)
 	_error(_peek(), "Invalid primary expression")
 	return null
