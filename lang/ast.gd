@@ -94,7 +94,23 @@ class GroupingExpr extends Expr:
 
 	func accept(visitor: AbstractAstVisitor) -> Variant:
 		return visitor.visit_grouping_expr(self)
+
+
+class VarExpr extends Expr:
+	var _name: Token
+
+
+	func _init(name: Token) -> void:
+		_name = name
 	
+
+	func get_name() -> Token:
+		return _name
+	
+
+	func accept(visitor: AbstractAstVisitor) -> Variant:
+		return visitor.visit_var_expr(self)
+
 
 class LiteralExpr extends Expr:
 	var _type: Variant.Type
@@ -175,6 +191,10 @@ class VarStmt extends Stmt:
 		return _initi
 	
 
+	func get_name() -> Token:
+		return _name
+	
+
 	func accept(visitor: AbstractAstVisitor) -> Variant:
 		return visitor.visit_var_stmt(self)
 
@@ -190,6 +210,7 @@ class AbstractAstVisitor:
 	func visit_literal_expr(_expr: LiteralExpr) -> Variant: return Lox.not_implemented()
 	func visit_unary_expr(_expr: UnaryExpr) -> Variant: return Lox.not_implemented()
 	func visit_grouping_expr(_grouping_expr: GroupingExpr) -> Variant: return Lox.not_implemented()
+	func visit_var_expr(_var_expr: VarExpr) -> Variant: return Lox.not_implemented()
 
 	func visit_expr_stmt(_expr_stmt: ExprStmt) -> Variant: return Lox.not_implemented()
 	func visit_print_stmt(_print_stmt: PrintStmt) -> Variant: return Lox.not_implemented()

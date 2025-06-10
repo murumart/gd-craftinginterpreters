@@ -106,6 +106,9 @@ func _parse_primary() -> Ast.Expr:
 	if _match([t.NUMBER, t.STRING]):
 		return Ast.lit(_previous().literal)
 	
+	if _match([t.IDENTIFIER]):
+		return Ast.VarExpr.new(_previous())
+	
 	if _match([t.LEFT_PAREN]):
 		var expr := _parse_expression()
 		var err := _consume(t.RIGHT_PAREN, "Expect ')' after expression.")

@@ -3,6 +3,7 @@ const Ast = preload("res://lang/ast.gd")
 const AstNode = Ast.AstNode
 const Scanner = preload("res://lang/scanner.gd")
 const t = Scanner.TokenType
+const Env = preload("res://lang/env.gd")
 
 
 func interpret(stmts: Array[Ast.Stmt]) -> void:
@@ -15,6 +16,9 @@ func interpret(stmts: Array[Ast.Stmt]) -> void:
 
 
 class Evaluator extends Ast.AbstractAstVisitor:
+	var env := Env.new()
+
+
 	func evaluate(expr: Ast.Expr) -> Variant:
 		return visit(expr)
 	
@@ -33,6 +37,15 @@ class Evaluator extends Ast.AbstractAstVisitor:
 		var ev: Variant = evaluate(print_stmt.get_expr())
 		if ev is RuntimeError: return ev
 		Lox.output(str(ev))
+		return null
+	
+
+	func visit_var_stmt(var_stmt: Ast.VarStmt) -> Variant:
+		var val: Variant = null
+		if var_stmt.get_initi() != null:
+			val = evaluate(var_stmt.get_initi())
+		
+		env.define(var_stmt.get_name().lexeme, val)
 		return null
 
 
@@ -102,6 +115,10 @@ class Evaluator extends Ast.AbstractAstVisitor:
 				return -target
 		return null
 	
+
+	func visit_var_expr(var_expr: Ast.VarExpr) -> Variant:
+		return env.getv(var_expr.get_name())
+
 
 	func is_truthy(a: Variant) -> bool:
 		if a is bool and a == false: return false
