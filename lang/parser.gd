@@ -37,7 +37,7 @@ func _parse_expression() -> Ast.Expr:
 
 
 func _parse_assignment() -> Ast.Expr:
-	var expr := _parse_equality()
+	var expr := _parse_or()
 
 	if _match([t.EQUAL]):
 		var equals := _previous()
@@ -52,10 +52,93 @@ func _parse_assignment() -> Ast.Expr:
 	return expr
 
 
+func _parse_or() -> Ast.Expr:
+	var expr := _parse_and()
+
+	while _match([t.OR]):
+		var op := _previous()
+		var right := _parse_and()
+		expr = Ast.LogicalExpr.new(expr, op, right)
+
+	return expr
+
+
+func _parse_and() -> Ast.Expr:
+	var expr := _parse_equality()
+
+	while _match([t.AND]):
+		var op := _previous()
+		var right := _parse_equality()
+		expr = Ast.LogicalExpr.new(expr, op, right)
+
+	return expr
+
+
 func _parse_statement() -> Ast.Stmt:
+	if _match([t.FOR]): return _parse_for_statement()
+	if _match([t.IF]): return _parse_if_statement()
 	if _match([t.PRINT]): return _parse_print_statement()
+	if _match([t.WHILE]): return _parse_while_statement()
 	if _match([t.LEFT_BRACE]): return Ast.BlockStmt.new(_parse_block())
 	return _parse_expression_statement()
+
+
+func _parse_for_statement() -> Ast.Stmt:
+	var e := _consume(t.LEFT_PAREN, "Expect '(' after 'for'.")
+	if e.err != OK:
+		return null
+	
+	var initialiser: Ast.Stmt
+	if _match([t.SEMICOLON]):
+		initialiser = null
+	elif _match([t.VAR]):
+		initialiser = _parse_var_declaration()
+	else:
+		initialiser = _parse_expression_statement()
+	
+	var condition: Ast.Expr = null
+	if not _check(t.SEMICOLON):
+		condition = _parse_expression()
+	e = _consume(t.SEMICOLON, "Expect ';' after loop condition.")
+	if e.err != OK:
+		return null
+
+	var increment: Ast.Expr = null
+	if not _check(t.RIGHT_PAREN):
+		increment = _parse_expression()
+	e = _consume(t.RIGHT_PAREN, "Expect ')' after for clauses.")
+	if e.err != OK:
+		return null
+	
+	var body := _parse_statement()
+
+	if increment != null:
+		body = Ast.BlockStmt.new([body, Ast.ExprStmt.new(increment)])
+	
+	if condition == null:
+		condition = Ast.LiteralExpr.new(true)
+	body = Ast.WhileStmt.new(condition, body)
+
+	if initialiser != null:
+		body = Ast.BlockStmt.new([initialiser, body])
+
+	return body
+
+
+func _parse_if_statement() -> Ast.IfStmt:
+	var e := _consume(t.LEFT_PAREN, "Expect '(' after 'if'.")
+	if e.err != OK:
+		return null
+	var condition := _parse_expression()
+	e = _consume(t.RIGHT_PAREN, "Expect ')' after 'condition'.")
+
+	var then_b := _parse_statement()
+	var else_b: Ast.Stmt = null
+	if _match([t.ELSE]):
+		else_b = _parse_statement()
+	
+	return Ast.IfStmt.new(condition, then_b, else_b)
+
 
 
 func _parse_print_statement() -> Ast.PrintStmt:
@@ -64,6 +147,19 @@ func _parse_print_statement() -> Ast.PrintStmt:
 	if err.err != OK:
 		return null
 	return Ast.PrintStmt.new(val)
+
+
+func _parse_while_statement() -> Ast.WhileStmt:
+	var e := _consume(t.LEFT_PAREN, "Expect '(' after 'while'.")
+	if e.err != OK:
+		return null
+	var condition := _parse_expression()
+	e = _consume(t.RIGHT_PAREN, "Expect ')' after 'condition'.")
+	if e.err != OK:
+		return null
+	var body := _parse_statement()
+
+	return Ast.WhileStmt.new(condition, body)
 
 
 func _parse_var_declaration() -> Ast.Stmt:

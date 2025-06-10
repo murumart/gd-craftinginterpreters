@@ -14,10 +14,10 @@ static func main(args: PackedStringArray) -> Error:
 	if args.size() > 1:
 		print("Usage: jlox [script]")
 		return ERR_UNCONFIGURED
-	
+
 	if args.size() == 1:
 		return _run_file(args[0])
-	
+
 	return await _run_prompt()
 
 
@@ -44,11 +44,11 @@ static func _run(program: String) -> Error:
 
 	if _had_error:
 		return FAILED
-	
+
 	_interpreter.interpret(stmts)
 	#if _line_output_method.is_valid():
 	#	_line_output_method.call(Ast.AstPrinter.new().do_program(stmts))
-	
+
 	if _had_runtime_error:
 		return FAILED
 
@@ -76,6 +76,7 @@ static func runtime_error(err: Eval.RuntimeError) -> void:
 
 
 static func _report(line: int, where: String, message: String) -> void:
+	breakpoint
 	var msg := "[line %d] Error %s: %s" % [line, where, message]
 	printerr(msg)
 	push_error(msg)
