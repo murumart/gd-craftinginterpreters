@@ -112,6 +112,28 @@ class VarExpr extends Expr:
 		return visitor.visit_var_expr(self)
 
 
+class AssignExpr extends Expr:
+	var _name: Token
+	var _val: Expr
+
+
+	func _init(name: Token, val: Expr)-> void:
+		_name = name
+		_val = val
+	
+
+	func get_val() -> Expr:
+		return _val
+	
+
+	func get_name() -> Token:
+		return _name
+	
+
+	func accept(visitor: AbstractAstVisitor) -> Variant:
+		return visitor.visit_assign_expr(self)
+
+
 class LiteralExpr extends Expr:
 	var _type: Variant.Type
 	var _value: Variant
@@ -143,6 +165,22 @@ class LiteralExpr extends Expr:
 
 class Stmt extends AstNode:
 	pass
+
+
+class BlockStmt extends Stmt:
+	var _stmts: Array[Stmt]
+
+
+	func _init(stmts: Array[Stmt]) -> void:
+		_stmts = stmts
+	
+
+	func get_stmts() -> Array[Stmt]:
+		return _stmts
+	
+
+	func accept(visitor: AbstractAstVisitor) -> Variant:
+		return visitor.visit_block_stmt(self)
 
 
 class ExprStmt extends Stmt:
@@ -213,8 +251,10 @@ class AbstractAstVisitor:
 	func visit_var_expr(_var_expr: VarExpr) -> Variant: return Lox.not_implemented()
 
 	func visit_expr_stmt(_expr_stmt: ExprStmt) -> Variant: return Lox.not_implemented()
+	func visit_block_stmt(_block_stmt: BlockStmt) -> Variant: return Lox.not_implemented()
 	func visit_print_stmt(_print_stmt: PrintStmt) -> Variant: return Lox.not_implemented()
 	func visit_var_stmt(_var_stmt: VarStmt) -> Variant: return Lox.not_implemented()
+	func visit_assign_expr(_assign_expr: AssignExpr) -> Variant: return Lox.not_implemented()
 
 
 class AstPrinter extends AbstractAstVisitor:

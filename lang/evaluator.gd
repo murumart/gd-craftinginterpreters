@@ -16,7 +16,7 @@ func interpret(stmts: Array[Ast.Stmt]) -> void:
 
 
 class Evaluator extends Ast.AbstractAstVisitor:
-	var env := Env.new()
+	var _env := Env.new()
 
 
 	func evaluate(expr: Ast.Expr) -> Variant:
@@ -26,6 +26,22 @@ class Evaluator extends Ast.AbstractAstVisitor:
 	func execute(stmt: Ast.Stmt) -> Variant:
 		return visit(stmt)
 	
+
+	func execute_block(stmts: Array[Ast.Stmt], env: Env) -> Variant:
+		var prev := _env
+		_env = env
+		for stmt in stmts:
+			var r: Variant = execute(stmt)
+			if r is RuntimeError:
+				Lox.runtime_error(r)
+		_env = prev
+		return null
+
+
+	func visit_block_stmt(block_stmt: Ast.BlockStmt) -> Variant:
+		execute_block(block_stmt.get_stmts(), Env.new(_env))
+		return null
+
 
 	func visit_expr_stmt(expr_stmt: Ast.ExprStmt) -> Variant:
 		var ev: Variant = evaluate(expr_stmt.get_expr())
@@ -45,8 +61,14 @@ class Evaluator extends Ast.AbstractAstVisitor:
 		if var_stmt.get_initi() != null:
 			val = evaluate(var_stmt.get_initi())
 		
-		env.define(var_stmt.get_name().lexeme, val)
+		_env.define(var_stmt.get_name().lexeme, val)
 		return null
+	
+
+	func visit_assign_expr(assign_expr: Ast.AssignExpr) -> Variant:
+		var val: Variant = evaluate(assign_expr.get_val())
+		_env.assign(assign_expr.get_name(), val)
+		return val
 
 
 	func visit_binary_expr(binary_expr: Ast.BinaryExpr) -> Variant:
@@ -117,7 +139,7 @@ class Evaluator extends Ast.AbstractAstVisitor:
 	
 
 	func visit_var_expr(var_expr: Ast.VarExpr) -> Variant:
-		return env.getv(var_expr.get_name())
+		return _env.getv(var_expr.get_name())
 
 
 	func is_truthy(a: Variant) -> bool:

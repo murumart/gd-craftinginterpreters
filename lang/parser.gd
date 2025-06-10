@@ -33,11 +33,28 @@ func _parse_declaration() -> Ast.Stmt:
 
 
 func _parse_expression() -> Ast.Expr:
-	return _parse_equality()
+	return _parse_assignment()
+
+
+func _parse_assignment() -> Ast.Expr:
+	var expr := _parse_equality()
+
+	if _match([t.EQUAL]):
+		var equals := _previous()
+		var value := _parse_assignment()
+
+		if expr is Ast.VarExpr:
+			var name: Token = expr.get_name()
+			return Ast.AssignExpr.new(name, value)
+		
+		Lox.error_t(equals, "Invalid assignment target.")
+	
+	return expr
 
 
 func _parse_statement() -> Ast.Stmt:
 	if _match([t.PRINT]): return _parse_print_statement()
+	if _match([t.LEFT_BRACE]): return Ast.BlockStmt.new(_parse_block())
 	return _parse_expression_statement()
 
 
@@ -68,6 +85,18 @@ func _parse_expression_statement() -> Ast.ExprStmt:
 	if err.err != OK:
 		return null
 	return Ast.ExprStmt.new(val)
+
+
+func _parse_block() -> Array[Ast.Stmt]:
+	var stmts: Array[Ast.Stmt] = []
+
+	while not _check(t.RIGHT_BRACE):
+		stmts.push_back(_parse_declaration())
+	
+	var err := _consume(t.RIGHT_BRACE, "Expect '}' after block.")
+	if err.err != OK:
+		return []
+	return stmts
 
 
 func _parse_equality() -> Ast.Expr:
